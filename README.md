@@ -4,40 +4,142 @@
 
 ---
 
-## ✨ What's New in This Version
+This code implements a minimal deep learning framework with:
 
-This enhanced version of `micrograd.py` includes:
+A custom automatic differentiation engine (like a tiny version of PyTorch or TensorFlow).
 
-- ✅ **Activation Functions**: `tanh`, `ReLU`, `sigmoid`, `exp`
-- ✅ **Optimizers**: Class-based `SGD` and `Adam`
-- ✅ **Loss Functions**: MSE and Binary Cross Entropy
-- ✅ **Mini-Batch Support**: `DataLoader` class with shuffle
-- ✅ **Visualization**: Pure Python computation graph using `matplotlib`
-- ✅ **Extensible**: Clean OOP-based design for easy experimentation
+A simple neural network architecture (MLP: Multi-Layer Perceptron).
 
----
+A training loop to teach it how to fit small input-output patterns.
 
-## 📌 What’s New Compared to micrograd?
+A custom visualizer using matplotlib to show how computations flow backward through the graph.
 
-| Feature                 | Karpathy’s micrograd | This Project (Micrograd++)       |
-|------------------------|----------------------|----------------------------------|
-| Activation functions    | tanh only            | tanh, ReLU, sigmoid, exp         |
-| Visual graph rendering  | via Graphviz         | via matplotlib (pure Python)     |
-| Optimizers              | Manual SGD           | SGD + Adam class-based           |
-| Loss functions          | Manual MSE           | MSE + CrossEntropy ready         |
-| Batching                | None                 | Mini-batch with shuffle support  |
-| Dataset support         | Toy manually entered | Ready for batching abstraction   |
+1. Core Concept: The Value class
+This is the heart of the code. Each number used in calculations is wrapped in a Value object. This object:
 
+Stores the actual numeric value.
 
-🧠 Learning Focus
-This project is ideal for learners and researchers who want to:
+Remembers how it was created (e.g., via addition, multiplication, etc.).
 
-Understand autograd systems and backpropagation
+Knows its parents—the inputs that were used to calculate it.
 
-Visualize computation graphs in forward/backward mode
+Tracks its gradient (i.e., how much a small change in this value affects the final output).
 
-Build and train neural nets without any external ML libraries
+Stores a tiny function (_backward) that can compute how its gradient should be passed backward to its inputs.
 
-Compare optimizers and activation functions in isolation
+This is how automatic differentiation is implemented.
 
+2. Math Support: Arithmetic and Functions
+The Value class is smart. It knows how to behave like a number in:
 
+Addition and subtraction
+
+Multiplication and division
+
+Power operations
+
+Unary negation (-x)
+
+Common functions like tanh and exp
+
+Every time you perform an operation, a new Value object is created, and a link is stored back to the inputs. This builds a computation graph.
+
+3. Backpropagation
+Once you compute some final output (like a loss), you can call .backward() on that result. This:
+
+Triggers a reverse pass through the graph.
+
+Each node runs its _backward function.
+
+This flows the gradient values backward from the output to the inputs using the chain rule from calculus.
+
+This allows the model to know how to update its weights to reduce error.
+
+4. Graph Drawing
+There's a function that takes the final Value result and:
+
+Walks through the computation graph recursively.
+
+Assigns x-y positions to each node based on depth and order.
+
+Draws boxes with values and gradients.
+
+Draws arrows for dependencies.
+
+Shows operations in red (+, *, etc.)
+
+This helps visualize how data and gradients flow during training.
+
+5. Neural Network Building Blocks
+The neural network is built using three classes:
+
+🧠 Neuron:
+Each neuron has a set of weights and a bias.
+
+It takes a list of input values, multiplies each by its weight, adds them all up, adds the bias, and then applies the tanh activation function.
+
+Outputs a single Value.
+
+🧱 Layer:
+A layer is just a list of neurons.
+
+It takes an input and passes it to every neuron, collecting the outputs.
+
+🔗 MLP (Multi-Layer Perceptron):
+This is a list of layers chained together.
+
+Each layer feeds its output to the next.
+
+This is your complete model.
+
+6. Test Case 1: Basic Expression Test
+This test creates a small chain of operations (like a * b + c) and computes a final loss. It:
+
+Labels all values (a, b, c, etc.) for easier visualization.
+
+Calls .backward() to get gradients.
+
+Draws the graph to show what the computation looks like.
+
+This is a minimal example of how the engine works.
+
+7. Test Case 2: Neural Network Training
+This test builds a 3-layer neural network to classify a few simple examples. Here's what it does:
+
+Defines 4 small input vectors and their target outputs (some are +1, others -1).
+
+Initializes an MLP with architecture: 3 input → 4 neurons → 4 neurons → 1 output.
+
+Makes predictions and prints them before training.
+
+Runs 20 training steps:
+
+Predicts outputs
+
+Calculates the squared error between predictions and actual labels
+
+Clears gradients
+
+Runs backpropagation
+
+Updates parameters using simple gradient descent (p.data -= learning_rate * p.grad)
+
+Prints loss after each step and final predictions.
+
+This shows how even a basic custom-made neural network can learn from data if gradients and updates are correctly handled.
+
+8. Unnecessary Warning
+The script also checks if graphviz is installed and warns you it's not needed (since this version uses only matplotlib for drawing).
+
+✅ Summary
+You're building:
+
+A miniature deep learning engine
+
+A clean visualizer for computation graphs
+
+A simple but working neural network from scratch
+
+A training pipeline that uses backpropagation
+
+And you’re doing it all without using any machine learning library — which is amazing for learning and understanding how deep learning actually works under the hood.
